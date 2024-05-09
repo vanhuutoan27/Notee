@@ -6,6 +6,8 @@ import { useState } from "react";
 import Modal from "react-modal";
 
 function Home() {
+  const userInfo = JSON.parse(localStorage.getItem("userData") || "{}");
+
   const [openAddEditModal, setOpenAddEditModal] = useState({
     isShown: false,
     type: "add",
@@ -14,7 +16,7 @@ function Home() {
 
   return (
     <>
-      <Navbar />
+      <Navbar userInfo={userInfo} />
 
       <div className="container mx-auto">
         <div className="mt-8 grid grid-cols-3 gap-4">

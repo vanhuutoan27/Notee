@@ -3,15 +3,14 @@ import { useNavigate, Link } from "react-router-dom"; // Import useNavigate and 
 import PasswordInput from "@/components/PasswordInput";
 import Navbar from "@/components/Navbar";
 import { validateEmail } from "@/utils/helper";
-import { useUser } from "@/context/UserContext";
+import noteeAPI from "@/utils/axios";
 
 function Login() {
   const navigate = useNavigate();
-  const { login } = useUser();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -28,26 +27,29 @@ function Login() {
 
     //Login API call
     try {
-      const response = await fetch("http://localhost:8000/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+      const response = await noteeAPI.post("/login", {
+        email: email,
+        password: password,
       });
 
-      if (response.ok) {
-        const { userData } = await response.json();
-        console.log("User Logged In", userData);
-        login(userData);
+      if ((response.status = 201)) {
+        const userData = await response.data;
+        // console.log("User Logged In", userData.userData);
+        localStorage.setItem("userData", JSON.stringify(userData.userData));
         navigate("/");
       } else {
-        const errorText = await response.json();
-        setError(errorText.error || "Invalid credentials");
+        setError(response.data.message || "Invalid credentials");
       }
     } catch (networkError) {
-      console.error("Network error:", networkError);
-      setError("Failed to connect to server");
-    } finally {
-      setError("");
+      if (networkError.response) {
+        setError(
+          networkError.response.data.message ||
+            "Login failed. Please try again later.",
+        );
+      } else {
+        console.error("Network error:", networkError);
+        setError("Failed to connect to server");
+      }
     }
   };
 

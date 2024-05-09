@@ -3,6 +3,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const mongoose = require('mongoose');
 const User = require('./models/user.model');
+const Note = require('./models/note.model');
 const cors = require('cors');
 
 // Initialize Express app
@@ -12,6 +13,10 @@ const port = process.env.PORT || 8000;
 // Use CORS
 app.use(cors());
 
+// Middleware for parsing request bodies
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // MongoDB Connection
 mongoose
   .connect('mongodb://localhost:27017/Notee', {
@@ -19,11 +24,7 @@ mongoose
     useUnifiedTopology: true,
   })
   .then(() => console.log('MongoDB connected'))
-  .catch((err) => console.log(err));
-
-// Middleware for parsing request bodies
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  .catch((error) => console.log(error));
 
 // Routes
 // Register User
@@ -96,6 +97,126 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ message: 'Server error', error });
   }
 });
+
+// Get User
+app.get('/get-user', async (req, res) => {
+  const { user } = req.user;
+
+  const isUser = await User.findOne({ _id: user._id });
+
+  if (!isUser) {
+    return res.status(401).json({ message: 'User not found' });
+  }
+
+  return res.json({
+    user: {
+      fullName: isUser.fullName,
+      email: isUser.email,
+      _id: isUser._id,
+      createdOn: isUser.createdOn,
+    },
+    message: '',
+  });
+});
+
+// // Get all Notes
+// app.get('/get-all-notes', async (req, res) => {
+//   const { user } = req.user;
+
+//   try {
+//     const notes = await Note.find({ userId: user._id }).sort({ isPinned: -1 });
+//     return res.json({ notes, message: 'All notes retrieved successfully' });
+//   } catch (error) {
+//     return res.status(500).json({ message: 'Error getting notes', error });
+//   }
+// });
+
+// // Add Note
+// app.post('/add-note', async (req, res) => {
+//   const { title, content, tags } = req.body;
+//   const { user } = req.user;
+
+//   if (!title) {
+//     return res.status(400).json({ message: 'Title is required' });
+//   }
+
+//   if (!content) {
+//     return res.status(400).json({ message: 'Content is required' });
+//   }
+
+//   try {
+//     const note = new Note({
+//       title,
+//       content,
+//       tags: tags || [],
+//       userId: user._id,
+//     });
+
+//     await note.save();
+
+//     return res.json({
+//       note,
+//       message: 'Note added successfully',
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ message: 'Error adding note', error });
+//   }
+// });
+
+// // Edit Note
+// app.put('/edit-note/:noteId', async (req, res) => {
+//   const noteId = req.params.noteId;
+//   const { title, content, tags, isPinned } = req.body;
+//   const { user } = req.user;
+
+//   if (!title && !content && !tags && !isPinned) {
+//     return res.status(400).json({ message: 'No changes provided' });
+//   }
+
+//   try {
+//     const note = await Note.findOne({ _id: noteId, userId: user._id });
+
+//     if (!note) {
+//       return res.status(404).json({ message: 'Note not found' });
+//     }
+
+//     if (title) note.title = title;
+//     if (content) note.content = content;
+//     if (tags) note.tags = tags;
+//     if (isPinned) note.isPinned = isPinned;
+
+//     await note.save();
+
+//     return res.json({
+//       note,
+//       message: 'Note updated successfully',
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ message: 'Error editing note', error });
+//   }
+// });
+
+// // Delete Note
+// app.delete('/delete-note/:noteId', async (req, res) => {
+//   const noteId = req.params.noteId;
+//   const { user } = req.user;
+
+//   try {
+//     const note = await Note.findOne({ _id: noteId, userId: user._id });
+
+//     if (!note) {
+//       return res.status(404).json({ message: 'Note not found' });
+//     }
+
+//     await Note.deleteOne({ _id: noteId, userId: user._id });
+
+//     return res.json({
+//       message: 'Note deleted successfully',
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ message: 'Error deleting note', error });
+//   }
+// });
 
 // Start the server
 app.listen(port, () => {

@@ -3,16 +3,15 @@ import Navbar from "@/components/Navbar";
 import { validateEmail } from "@/utils/helper";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useUser } from "@/context/UserContext";
+import noteeAPI from "@/utils/axios";
 
 function Register() {
   const navigate = useNavigate();
-  const { register } = useUser();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const [error, setError] = useState("");
 
   const handleRegister = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -34,24 +33,23 @@ function Register() {
 
     //Register API call
     try {
-      const response = await fetch("http://localhost:8000/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fullName: name, email, password }),
+      const response = await noteeAPI.post("/register", {
+        fullName: name,
+        email: email,
+        password: password,
       });
 
-      if (response.ok) {
-        const userData = await response.json();
-        console.log("User registered", userData);
-        register(userData.userData);
+      if (response.status === 201) {
+        const newUserData = await response.data;
+        // console.log("User registered", newUserData.userData);
+        localStorage.setItem("userData", JSON.stringify(newUserData.userData));
         navigate("/");
       } else {
-        setError("Error registering new user");
+        setError(response.data.message || "Error registering new user");
       }
     } catch (error) {
       setError("Failed to connect to server");
-    } finally {
-      setError("");
+      console.log(error);
     }
   };
   return (

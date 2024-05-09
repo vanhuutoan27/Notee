@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ProfileInfo from "./ProfileInfo";
 import SearchBar from "./SearchBar";
+import { IUser } from "@/types/user.interface";
 
-function Navbar() {
+function Navbar({ userInfo }: { userInfo: IUser }) {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -14,7 +15,7 @@ function Navbar() {
   };
 
   const onLogout = () => {
-    localStorage.removeItem("userData");
+    localStorage.clear();
     navigate("/login");
   };
 
@@ -33,7 +34,7 @@ function Navbar() {
         onClearSearch={onClearSearch}
       />
 
-      <ProfileInfo onLogout={onLogout} />
+      <ProfileInfo userInfo={userInfo} onLogout={onLogout} />
     </div>
   );
 }

@@ -39,7 +39,7 @@ function NoteCard({
       <p className="mt-2 text-xs text-slate-600">{content?.slice(0, 60)}</p>
 
       <div className="mt-2 flex items-center justify-between">
-        <div className="text-xs text-slate-500">{tags}</div>
+        <div className="text-xs text-slate-500">{tags.join(" ")}</div>
         <div className="flex items-center gap-2">
           <Pencil
             size={20}
